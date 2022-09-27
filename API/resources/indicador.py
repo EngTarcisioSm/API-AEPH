@@ -1,4 +1,3 @@
-# 1. movimentacao da classe/recurso indicadores para este modulo
 from flask_restful import Resource
 
 indicadores = [
