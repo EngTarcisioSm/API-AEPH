@@ -26,14 +26,25 @@ def check_last_id():
         last = indicador['indicador_id']
     return last
 
+# 3. modificação de retorno da função
+
+
 def check_name(nome: str):
     global indicadores
-    answer = None
     for indicador in indicadores:
         if indicador['nome_indicador'] == nome:
-            answer = 1
-            break
-    return answer
+            return indicador
+    return None
+
+# 2. faz busca de um indicador por seu ID
+
+
+def check_id(id: int):
+    global indicadores
+    for indicador in indicadores:
+        if indicador['indicador_id'] == id:
+            return indicador
+    return None
 
 
 class Indicadores(Resource):
@@ -66,6 +77,34 @@ class IndicadorID(Resource):
             return novo_indicador, 200
         return {'message': 'not included'}
 
+    def put(self, indicador_id):
+        # 1. coletando os dados passados
+        dados = argumentos.parse_args()
+
+        try:
+            id = int(indicador_id)
+        except:
+            return {'message': 'Indicador Not Found!'}, 404
+
+        indicador = check_id(id)
+
+        novo_indicador = {'indicador_id': id, **dados}
+
+        if check_name(dados['nome_indicador']):
+            return {'message': 'Error Request'}
+
+        # 4. caso o id exista o indicador tem seu nome atualizado
+        if indicador:
+            indicador.update(novo_indicador)
+            return novo_indicador, 200
+
+        # 5. caso o id não exista é criado um novo indicador com o proximo id
+        # disponivel
+        novo_id = check_last_id()
+        novo_indicador['indicador_id'] = novo_id+1
+        indicadores.append(novo_indicador)
+
+        return novo_indicador, 201
 
 
 class IndicadorNome(Resource):
@@ -90,3 +129,31 @@ class IndicadorNome(Resource):
             indicadores.append(novo_indicador)
             return novo_indicador, 200
         return {'message': 'not included'}
+
+    def put(self, nome_indicador):
+
+        dados = argumentos.parse_args()
+
+        # verifica a existencia do indicador 
+        indicador = check_name(nome_indicador)
+
+        # verifica se o dado passado na url veio vazio
+        if dados['nome_indicador'] is None:
+            return {'message': 'Error Request'}
+
+        # verifica se ja existe um indicador com o nome passado para o novo 
+        # nome 
+        if check_name(dados['nome_indicador']):
+            return {'message': 'Error Request'}
+
+        if indicador:
+            novo_indicador = {
+                'indicador_id': indicador['indicador_id'], **dados}
+            indicador.update(novo_indicador)
+            return novo_indicador, 200
+
+        novo_id = check_last_id()
+        novo_indicador = {'indicador_id': novo_id+1, **dados}
+        indicadores.append(novo_indicador)
+
+        return novo_indicador, 201
